@@ -132,4 +132,4 @@ dmypy.json
 *.csv
 
 # VS code
-.vscode
+.vscode/
