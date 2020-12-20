@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # input data
-*.csv
+#######################*.csv
 
 # VS code
 .vscode/

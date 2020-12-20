@@ -3,15 +3,17 @@ import pandas as pd
 import glob
 import numpy as np
 
-class DIFF_TIMING_CHART:
-    # CSVにあわせて設定 のちにYAMLにうつすか？
-    # 「開く」で正解値パス、比較対象パスを選ばせるか？
-    TRUE_CSV = glob.glob('TRUE*.csv')[0]
-    INPUT_CSV = glob.glob('*.csv')[0]
+class DiffTimingChart:
     # ヘッダー行（データ依存）
     HEADER_INDEX = 3
     # 起点ラベル（この信号に変化があった直前にオフセットを付ける）
     STARTING_LABEL = 'hoge1'
+
+    def __init__(self):
+        # CSVにあわせて設定 のちにYAMLにうつすか？
+        # 「開く」で正解値パス、比較対象パスを選ばせるか？
+        self.TRUE_CSV = glob.glob('TRUE*.csv')[0]
+        self.INPUT_CSV = glob.glob('*.csv')[0]
 
     def get_offset(self, df_all_data, starting_label):
         '''
@@ -34,14 +36,14 @@ class DIFF_TIMING_CHART:
         df = pd.read_csv(self.INPUT_CSV, index_col=0, header=self.HEADER_INDEX, encoding='shift_jis')
         df_true = pd.read_csv(self.TRUE_CSV, index_col=0, header=self.HEADER_INDEX, encoding='shift_jis')
         # 信号名ラベル
-        LABEL = df.columns.values
-        LABEL_TRUE = df_true.columns.values
+        label = df.columns.values
+        label_true = df_true.columns.values
         # 相関係数計算
-        self.calc_corrcoef(df, LABEL, df_true, LABEL_TRUE)
+        self.calc_corrcoef(df, label, df_true, label_true)
 
         # 以降、描画系、まとめるなりもう少し何とかするか？
         # グラフ数（多い方にあわせる）
-        GRAPHNUM = len(df.columns) if len(df.columns) > len(df_true.columns) else len(df_true.columns)
+        graph_num = len(df.columns) if len(df.columns) > len(df_true.columns) else len(df_true.columns)
 
         # 始点オフセット
         x_starting = self.get_offset(df, self.STARTING_LABEL)
@@ -53,9 +55,9 @@ class DIFF_TIMING_CHART:
         plt.rcParams['xtick.direction'] = 'in' #x軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
         plt.rcParams['ytick.direction'] = 'in' #x軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
         # データプロットと表示レイアウト
-        fig, axis = plt.subplots(GRAPHNUM, sharex=True)  # 複数グラフをx軸を共有して表示
+        fig, axis = plt.subplots(graph_num, sharex=True)  # 複数グラフをx軸を共有して表示
         for i, d in enumerate(df.T.values):
-            axis[i].plot(x, d, drawstyle='steps', label=LABEL[i] + ' @' + self.INPUT_CSV)   # データをステップでプロット
+            axis[i].plot(x, d, drawstyle='steps', label=label[i] + ' @' + self.INPUT_CSV)   # データをステップでプロット
             axis[i].spines['right'].set_visible(False)              # 右枠非表示
             axis[i].spines['top'].set_visible(False)                # 上枠非表示
             axis[i].legend(loc=2)                                   # 凡例表示
@@ -64,7 +66,7 @@ class DIFF_TIMING_CHART:
             axis[i].set_xlim(x_starting, x_max)                     # X軸を起点ラベルの変化タイミングにする
         
         for i, d in enumerate(df_true.T.values):
-            axis[i].plot(x_true, d, drawstyle='steps', label=LABEL_TRUE[i] + ' @' + self.TRUE_CSV) # データをステップでプロット
+            axis[i].plot(x_true, d, drawstyle='steps', label=label_true[i] + ' @' + self.TRUE_CSV) # データをステップでプロット
             x_min, x_max = axis[i].get_xlim()
             axis[i].set_xlim(x_starting_true, x_max)                # X軸を起点ラベルの変化タイミングにする
             axis[i].legend(loc=2)                                   # 凡例表示
@@ -88,6 +90,6 @@ class DIFF_TIMING_CHART:
 
 
 if __name__ == "__main__":
-    dtc = DIFF_TIMING_CHART()
+    dtc = DiffTimingChart()
     dtc.make_chart()
     
