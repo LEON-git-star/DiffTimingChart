@@ -75,7 +75,12 @@ class DIFF_TIMING_CHART:
         plt.show()
     
     def calc_corrcoef(self, df_input, label_input, df_true, label_true):
-        common_labels = list(set(label_input) & set(label_true))
+        label_input_list = list(label_input)
+        label_true_list = list(label_true)
+        # 数が多い方をインデックスリストとする
+        index_list = label_input_list if len(label_input_list) > len(label_true_list) else label_true_list
+        # 共通ラベル
+        common_labels = list(sorted(set(label_input_list) & set(label_true_list), key=index_list.index))
         for label in common_labels:
             #corrcoef = [np.corrcoef(i, t) for (i, t) in zip(df_input[label], df_true[label])]
             print(np.corrcoef(df_input[label], df_true[label]))
