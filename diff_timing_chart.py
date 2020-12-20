@@ -8,7 +8,9 @@ class DIFF_TIMING_CHART:
     # 「開く」で正解値パス、比較対象パスを選ばせるか？
     TRUE_CSV = glob.glob('TRUE*.csv')[0]
     INPUT_CSV = glob.glob('*.csv')[0]
+    # ヘッダー行（データ依存）
     HEADER_INDEX = 3
+    # 起点ラベル（この信号に変化があった直前にオフセットを付ける）
     STARTING_LABEL = 'hoge1'
 
     def get_offset(self, df_all_data, starting_label):
@@ -17,7 +19,7 @@ class DIFF_TIMING_CHART:
         '''
         df = df_all_data[starting_label]
         df_val = df.values
-        #starting_idex = [i for i, d in enumerate(df_val) if d > 0][0]
+
         prev_val = df_val[0]
         for i, d in enumerate(df_val):
             if d != prev_val:
@@ -64,7 +66,7 @@ class DIFF_TIMING_CHART:
         for i, d in enumerate(df_true.T.values):
             axis[i].plot(x_true, d, drawstyle='steps', label=LABEL_TRUE[i] + ' @' + self.TRUE_CSV) # データをステップでプロット
             x_min, x_max = axis[i].get_xlim()
-            axis[i].set_xlim(x_starting_true, x_max)                     # X軸を起点ラベルの変化タイミングにする
+            axis[i].set_xlim(x_starting_true, x_max)                # X軸を起点ラベルの変化タイミングにする
             axis[i].legend(loc=2)                                   # 凡例表示
 
         # 縦方向に、間隔を密にグラフをレイアウト
@@ -82,7 +84,6 @@ class DIFF_TIMING_CHART:
         # 共通ラベル
         common_labels = list(sorted(set(label_input_list) & set(label_true_list), key=index_list.index))
         for label in common_labels:
-            #corrcoef = [np.corrcoef(i, t) for (i, t) in zip(df_input[label], df_true[label])]
             print(np.corrcoef(df_input[label], df_true[label]))
 
 
