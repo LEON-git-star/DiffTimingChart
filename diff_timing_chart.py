@@ -4,10 +4,11 @@ import glob
 
 class DIFF_TIMING_CHART:
     # CSVにあわせて設定 のちにYAMLにうつすか
+    # 「開く」で正解値パス、比較対象パスを選ばせるか
     TRUE_CSV = glob.glob('TRUE*.csv')[0]
     INPUT_CSV = glob.glob('*.csv')[0]
     HEADER_INDEX = 3
-    STARTING_LABEL = ' hoge1'
+    STARTING_LABEL = 'hoge1'
 
     def get_offset(self, df_all_data, starting_label):
         '''
@@ -53,6 +54,24 @@ class DIFF_TIMING_CHART:
         fig.subplots_adjust(hspace=0.1)
         # メモリの重なりをなくす
         plt.tight_layout()
+
+        # グラフ表示
+        #plt.show()
+
+        df_true = pd.read_csv(self.TRUE_CSV, index_col=0, header=self.HEADER_INDEX, encoding='shift_jis')
+        x_starting = self.get_offset(df_true, self.STARTING_LABEL)
+
+        # グラフ情報
+        GRAPHNUM = len(df_true.columns)  # 数
+        LABEL = df_true.columns.values   # 種類
+
+        ## X軸情報(X軸共通化のため別途定義)
+        x = df_true.index.values
+        for i, d in enumerate(df_true.T.values):
+            axis[i].plot(x, d, drawstyle='steps', label=LABEL[i])   # データをステップでプロット
+            x_min, x_max = axis[i].get_xlim()
+            axis[i].set_xlim(x_starting, x_max)                     # X軸を起点ラベルの変化タイミングにする
+
 
         # グラフ表示
         plt.show()
