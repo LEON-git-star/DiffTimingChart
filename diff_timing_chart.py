@@ -3,11 +3,12 @@ import pandas as pd
 import glob
 import numpy as np
 
+
 class DiffTimingChart:
     # ヘッダー行（データ依存）
     HEADER_INDEX = 3
     # 起点ラベル（この信号に変化があった直前にオフセットを付ける）
-    STARTING_LABEL = 'hoge1'
+    STARTING_LABEL = 'エラー１'
 
     def __init__(self):
         # CSVにあわせて設定 のちにYAMLにうつすか？
@@ -33,8 +34,8 @@ class DiffTimingChart:
 
     def make_chart(self):
         # read csv file
-        df = pd.read_csv(self.INPUT_CSV, index_col=0, header=self.HEADER_INDEX, encoding='shift_jis')
-        df_true = pd.read_csv(self.TRUE_CSV, index_col=0, header=self.HEADER_INDEX, encoding='shift_jis')
+        df = pd.read_csv(self.INPUT_CSV, index_col=0, header=self.HEADER_INDEX, encoding='utf-8')
+        df_true = pd.read_csv(self.TRUE_CSV, index_col=0, header=self.HEADER_INDEX, encoding='utf-8')
         # 信号名ラベル
         label = df.columns.values
         label_true = df_true.columns.values
@@ -51,6 +52,10 @@ class DiffTimingChart:
         ## X軸情報(X軸共通化のため別途定義)
         x = df.index.values
         x_true = df_true.index.values
+
+        # 日本語用フォント設定
+        plt.rcParams['font.family'] = 'sans-serif'
+        plt.rcParams['font.sans-serif'] = ['Hiragino Maru Gothic Pro', 'Yu Gothic', 'Meirio', 'Takao', 'IPAexGothic', 'IPAPGothic', 'VL PGothic', 'Noto Sans CJK JP']
 
         plt.rcParams['xtick.direction'] = 'in' #x軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
         plt.rcParams['ytick.direction'] = 'in' #x軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')

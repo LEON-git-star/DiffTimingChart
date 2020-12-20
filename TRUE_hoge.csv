@@ -1,7 +1,7 @@
 header,,,
 ,,,
 Date,,,
-#time_Rate[usec],#huga,hoge1,hoge2
+#time_Rate[usec],A信号,現在状態,エラー１
 0,0,0,0
 100,0,0,0
 200,0,0,0
