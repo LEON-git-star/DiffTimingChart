@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import glob
 import numpy as np
-
+import scipy.signal as sig
 
 class DiffTimingChart:
     # ヘッダー行（データ依存）
@@ -61,20 +61,20 @@ class DiffTimingChart:
         plt.rcParams['ytick.direction'] = 'in' #x軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
         # データプロットと表示レイアウト
         fig, axis = plt.subplots(graph_num, sharex=True)  # 複数グラフをx軸を共有して表示
+        for i, d in enumerate(df_true.T.values):
+            axis[i].plot(x_true, d, drawstyle='steps', label=label_true[i] + ' @' + self.TRUE_CSV, color = 'orange') # データをステップでプロット
+            x_min, x_max = axis[i].get_xlim()
+            axis[i].set_xlim(x_starting_true, x_max)                # X軸を起点ラベルの変化タイミングにする
+            axis[i].legend(loc=2)                                   # 凡例表示
+
         for i, d in enumerate(df.T.values):
-            axis[i].plot(x, d, drawstyle='steps', label=label[i] + ' @' + self.INPUT_CSV)   # データをステップでプロット
+            axis[i].plot(x, d, drawstyle='steps', label=label[i] + ' @' + self.INPUT_CSV, color = 'gray')   # データをステップでプロット
             axis[i].spines['right'].set_visible(False)              # 右枠非表示
             axis[i].spines['top'].set_visible(False)                # 上枠非表示
             axis[i].legend(loc=2)                                   # 凡例表示
             axis[i].grid(linestyle='-')                             # グリッド線表示
             x_min, x_max = axis[i].get_xlim()
             axis[i].set_xlim(x_starting, x_max)                     # X軸を起点ラベルの変化タイミングにする
-        
-        for i, d in enumerate(df_true.T.values):
-            axis[i].plot(x_true, d, drawstyle='steps', label=label_true[i] + ' @' + self.TRUE_CSV) # データをステップでプロット
-            x_min, x_max = axis[i].get_xlim()
-            axis[i].set_xlim(x_starting_true, x_max)                # X軸を起点ラベルの変化タイミングにする
-            axis[i].legend(loc=2)                                   # 凡例表示
 
         # 縦方向に、間隔を密にグラフをレイアウト
         fig.subplots_adjust(hspace=0.1)
@@ -91,7 +91,8 @@ class DiffTimingChart:
         # 共通ラベル
         common_labels = list(sorted(set(label_input_list) & set(label_true_list), key=index_list.index))
         for label in common_labels:
-            print(np.corrcoef(df_input[label], df_true[label]))
+            print(sig.correlate(df_true[label], df_input[label]))
+            #print(np.corrcoef(df_input[label], df_true[label]))
 
 
 if __name__ == "__main__":
