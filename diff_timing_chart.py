@@ -34,14 +34,14 @@ class DIFF_TIMING_CHART:
         df = pd.read_csv(self.INPUT_CSV, index_col=0, header=self.HEADER_INDEX, encoding='shift_jis')
         df_true = pd.read_csv(self.TRUE_CSV, index_col=0, header=self.HEADER_INDEX, encoding='shift_jis')
         # 信号名ラベル
-        LABEL = df.columns.values   # 種類
-        LABEL_TRUE = df_true.columns.values   # 種類
+        LABEL = df.columns.values
+        LABEL_TRUE = df_true.columns.values
         # 相関係数計算
         self.calc_corrcoef(df, LABEL, df_true, LABEL_TRUE)
 
         # 以降、描画系、まとめるなりもう少し何とかするか？
-        # グラフ情報
-        GRAPHNUM = len(df.columns)  # 数
+        # グラフ数（多い方にあわせる）
+        GRAPHNUM = len(df.columns) if len(df.columns) > len(df_true.columns) else len(df_true.columns)
 
         # 始点オフセット
         x_starting = self.get_offset(df, self.STARTING_LABEL)
