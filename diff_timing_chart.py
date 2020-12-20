@@ -30,7 +30,7 @@ class DiffTimingChart:
                 break
             prev_val = d
 
-        return df.index[starting_idex-1]
+        return df.index[starting_idex-1], starting_idex-1
 
     def make_chart(self):
         # read csv file
@@ -39,19 +39,24 @@ class DiffTimingChart:
         # 信号名ラベル
         label = df.columns.values
         label_true = df_true.columns.values
-        # 相関係数計算
-        self.calc_corrcoef(df, label, df_true, label_true)
-
-        # 以降、描画系、まとめるなりもう少し何とかするか？
-        # グラフ数（多い方にあわせる）
-        graph_num = len(df.columns) if len(df.columns) > len(df_true.columns) else len(df_true.columns)
 
         # 始点オフセット
-        x_starting = self.get_offset(df, self.STARTING_LABEL)
-        x_starting_true = self.get_offset(df_true, self.STARTING_LABEL)
+        x_starting, x_offset = self.get_offset(df, self.STARTING_LABEL)
+        x_starting_true, x_offset_true = self.get_offset(df_true, self.STARTING_LABEL)
+
+        # 相関係数計算
+        self.calc_corrcoef(df, label, x_offset, df_true, label_true, x_offset_true)
+
+        # 以降、描画系、まとめるなりもう少し何とかするか？
+
+
+
         ## X軸情報(X軸共通化のため別途定義)
         x = df.index.values
         x_true = df_true.index.values
+        
+        # グラフ数（多い方にあわせる）
+        graph_num = len(df.columns) if len(df.columns) > len(df_true.columns) else len(df_true.columns)
 
         # 日本語用フォント設定
         plt.rcParams['font.family'] = 'sans-serif'
@@ -64,7 +69,7 @@ class DiffTimingChart:
         for i, d in enumerate(df_true.T.values):
             axis[i].plot(x_true, d, drawstyle='steps', label=label_true[i] + ' @' + self.TRUE_CSV, color = 'orange') # データをステップでプロット
             x_min, x_max = axis[i].get_xlim()
-            axis[i].set_xlim(x_starting_true, x_max)                # X軸を起点ラベルの変化タイミングにする
+            #axis[i].set_xlim(x_starting_true, x_max)                # X軸を起点ラベルの変化タイミングにする
             axis[i].legend(loc=2)                                   # 凡例表示
 
         for i, d in enumerate(df.T.values):
@@ -74,7 +79,7 @@ class DiffTimingChart:
             axis[i].legend(loc=2)                                   # 凡例表示
             axis[i].grid(linestyle='-')                             # グリッド線表示
             x_min, x_max = axis[i].get_xlim()
-            axis[i].set_xlim(x_starting, x_max)                     # X軸を起点ラベルの変化タイミングにする
+            #axis[i].set_xlim(x_starting, x_max)                     # X軸を起点ラベルの変化タイミングにする
 
         # 縦方向に、間隔を密にグラフをレイアウト
         fig.subplots_adjust(hspace=0.1)
@@ -83,7 +88,7 @@ class DiffTimingChart:
         # グラフ表示
         plt.show()
     
-    def calc_corrcoef(self, df_input, label_input, df_true, label_true):
+    def calc_corrcoef(self, df_input, label_input, offset, df_true, label_true, offset_true):
         label_input_list = list(label_input)
         label_true_list = list(label_true)
         # 数が多い方をインデックスリストとする
@@ -91,9 +96,9 @@ class DiffTimingChart:
         # 共通ラベル
         common_labels = list(sorted(set(label_input_list) & set(label_true_list), key=index_list.index))
         for label in common_labels:
+            print(label)
             print(sig.correlate(df_true[label], df_input[label]))
-            #print(np.corrcoef(df_input[label], df_true[label]))
-
+            
 
 if __name__ == "__main__":
     dtc = DiffTimingChart()
