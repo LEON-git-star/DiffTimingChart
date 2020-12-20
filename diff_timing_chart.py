@@ -24,8 +24,7 @@ class DiffTimingChart:
         label = df.columns.values
         label_true = df_true.columns.values
 
-        # 相関係数計算
-        self.calc_corrcoef(df, label, df_true, label_true)
+
 
         # 以降、描画系、まとめるなりもう少し何とかするか？
 
@@ -56,6 +55,8 @@ class DiffTimingChart:
             axis[i].spines['top'].set_visible(False)                # 上枠非表示
             axis[i].legend(loc=2)                                   # 凡例表示
             axis[i].grid(linestyle='-')                             # グリッド線表示
+            # 相関係数計算
+            self.calc_corrcoef(df, label, df_true, label_true, axis[i])
 
         # 縦方向に、間隔を密にグラフをレイアウト
         fig.subplots_adjust(hspace=0.1)
@@ -64,7 +65,7 @@ class DiffTimingChart:
         # グラフ表示
         plt.show()
     
-    def calc_corrcoef(self, df_input, label_input, df_true, label_true):
+    def calc_corrcoef(self, df_input, label_input, df_true, label_true, axis):
         label_input_list = list(label_input)
         label_true_list = list(label_true)
         # 数が多い方をインデックスリストとする
@@ -72,8 +73,17 @@ class DiffTimingChart:
         # 共通ラベル
         common_labels = list(sorted(set(label_input_list) & set(label_true_list), key=index_list.index))
         for label in common_labels:
-            print(label)
-            print(sig.correlate(df_true[label], df_input[label]))
+            corr = sig.correlate(df_true[label], df_input[label])
+            estimated_delay = corr.argmax() - (len(df_input[label]) - 1)
+            print(corr)
+            print("estimated delay is " + str(estimated_delay))
+            norm_corr = corr / max(corr)
+            if np.isnan(norm_corr[0]):
+                print(label)
+            axis.plot(np.arange(len(corr)) - len(df_input[label]) + 1, corr, color = 'red')
+
+        return 
+                
             
 
 if __name__ == "__main__":
