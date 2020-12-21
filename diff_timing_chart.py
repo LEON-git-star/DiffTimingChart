@@ -7,8 +7,6 @@ import scipy.signal as sig
 class DiffTimingChart:
     # ヘッダー行（データ依存）
     HEADER_INDEX = 3
-    # 起点ラベル（この信号に変化があった直前にオフセットを付ける）
-    STARTING_LABEL = 'エラー１'
 
     def __init__(self):
         # CSVにあわせて設定 のちにYAMLにうつすか？
@@ -23,26 +21,16 @@ class DiffTimingChart:
         # 信号名ラベル
         label = df.columns.values
         label_true = df_true.columns.values
-
-
+        # 相関係数計算
+        self.calc_corrcoef(df, label, df_true, label_true)
 
         # 以降、描画系、まとめるなりもう少し何とかするか？
-
-
 
         ## X軸情報(X軸共通化のため別途定義)
         x = df.index.values
         x_true = df_true.index.values
-        
         # グラフ数（多い方にあわせる）
         graph_num = len(df.columns) if len(df.columns) > len(df_true.columns) else len(df_true.columns)
-
-        # 日本語用フォント設定
-        plt.rcParams['font.family'] = 'sans-serif'
-        plt.rcParams['font.sans-serif'] = ['Hiragino Maru Gothic Pro', 'Yu Gothic', 'Meirio', 'Takao', 'IPAexGothic', 'IPAPGothic', 'VL PGothic', 'Noto Sans CJK JP']
-
-        plt.rcParams['xtick.direction'] = 'in' #x軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
-        plt.rcParams['ytick.direction'] = 'in' #x軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
         # データプロットと表示レイアウト
         fig, axis = plt.subplots(graph_num, sharex=True)  # 複数グラフをx軸を共有して表示
         for i, d in enumerate(df_true.T.values):
@@ -55,17 +43,21 @@ class DiffTimingChart:
             axis[i].spines['top'].set_visible(False)                # 上枠非表示
             axis[i].legend(loc=2)                                   # 凡例表示
             axis[i].grid(linestyle='-')                             # グリッド線表示
-            # 相関係数計算
-            self.calc_corrcoef(df, label, df_true, label_true, axis[i])
 
         # 縦方向に、間隔を密にグラフをレイアウト
         fig.subplots_adjust(hspace=0.1)
+        # 日本語用フォント設定
+        plt.rcParams['font.family'] = 'sans-serif'
+        plt.rcParams['font.sans-serif'] = ['Hiragino Maru Gothic Pro', 'Yu Gothic', 'Meirio', 'Takao', 'IPAexGothic', 'IPAPGothic', 'VL PGothic', 'Noto Sans CJK JP']
+
+        plt.rcParams['xtick.direction'] = 'in' #x軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
+        plt.rcParams['ytick.direction'] = 'in' #x軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
         # メモリの重なりをなくす
         plt.tight_layout()
         # グラフ表示
         plt.show()
     
-    def calc_corrcoef(self, df_input, label_input, df_true, label_true, axis):
+    def calc_corrcoef(self, df_input, label_input, df_true, label_true):
         label_input_list = list(label_input)
         label_true_list = list(label_true)
         # 数が多い方をインデックスリストとする
@@ -73,17 +65,25 @@ class DiffTimingChart:
         # 共通ラベル
         common_labels = list(sorted(set(label_input_list) & set(label_true_list), key=index_list.index))
         for label in common_labels:
-            corr = sig.correlate(df_true[label], df_input[label])
-            estimated_delay = corr.argmax() - (len(df_input[label]) - 1)
+            # 平均０に平準化
+            sig_true = df_true[label] - df_true[label].mean()
+            sig_input = df_input[label] - df_input[label].mean()
+            # 畳み込み積分
+            corr = np.correlate(sig_true, sig_input, 'full')
+            # ラグ
+            estimated_delay = corr.argmax() - (len(sig_input) - 1)
+            # with lag
+            sig_input_lag = sig_input.shift(estimated_delay)
+
+            # 畳み込み積分（ラグ考慮）
+            corr_lag = np.correlate(sig_true, sig_input_lag, 'full')
+            print(label)
             print(corr)
             print("estimated delay is " + str(estimated_delay))
-            norm_corr = corr / max(corr)
-            if np.isnan(norm_corr[0]):
-                print(label)
-            axis.plot(np.arange(len(corr)) - len(df_input[label]) + 1, corr, color = 'red')
+
+            print("NEW CORR: \n", corr_lag)
 
         return 
-                
             
 
 if __name__ == "__main__":
