@@ -75,8 +75,10 @@ class DiffTimingChart:
             # with lag
             sig_input_lag = sig_input.shift(estimated_delay)
 
+
             # 畳み込み積分（ラグ考慮）
-            corr_lag = np.correlate(sig_true, sig_input_lag, 'full')
+            #corr_lag = sig_input_lag.corr().dropna().iat[1, 0]
+            corr_lag = np.correlate(sig_true[:estimated_delay], sig_input_lag.dropna(), 'full')
             print(label)
             print(corr)
             print("estimated delay is " + str(estimated_delay))
