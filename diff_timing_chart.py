@@ -14,6 +14,17 @@ class DiffTimingChart:
         self.TRUE_CSV = glob.glob('TRUE*.csv')[0]
         self.INPUT_CSV = glob.glob('*.csv')[0]
 
+        self.graph_settings()
+
+    def graph_settings(self):
+        # 日本語用フォント設定
+        plt.rcParams['font.family'] = 'sans-serif'
+        plt.rcParams['font.sans-serif'] = ['Hiragino Maru Gothic Pro', 'Yu Gothic', 'Meirio', 'Takao', 'IPAexGothic', 'IPAPGothic', 'VL PGothic', 'Noto Sans CJK JP']
+        #x軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
+        plt.rcParams['xtick.direction'] = 'in'
+        #y軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
+        plt.rcParams['ytick.direction'] = 'in'
+
     def make_chart(self):
         # read csv file
         df = pd.read_csv(self.INPUT_CSV, index_col=0, header=self.HEADER_INDEX, encoding='utf-8')
@@ -23,8 +34,6 @@ class DiffTimingChart:
         label_true = df_true.columns.values
         # 相関係数計算
         self.calc_corrcoef(df, label, df_true, label_true)
-
-        # 以降、描画系、まとめるなりもう少し何とかするか？
 
         ## X軸情報(X軸共通化のため別途定義)
         x = df.index.values
@@ -46,14 +55,7 @@ class DiffTimingChart:
 
         # 縦方向に、間隔を密にグラフをレイアウト
         fig.subplots_adjust(hspace=0.1)
-        # 日本語用フォント設定
-        plt.rcParams['font.family'] = 'sans-serif'
-        plt.rcParams['font.sans-serif'] = ['Hiragino Maru Gothic Pro', 'Yu Gothic', 'Meirio', 'Takao', 'IPAexGothic', 'IPAPGothic', 'VL PGothic', 'Noto Sans CJK JP']
 
-        plt.rcParams['xtick.direction'] = 'in' #x軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
-        plt.rcParams['ytick.direction'] = 'in' #x軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
-        # メモリの重なりをなくす
-        plt.tight_layout()
         # グラフ表示
         plt.show()
     
@@ -62,9 +64,12 @@ class DiffTimingChart:
         label_true_list = list(label_true)
         # 数が多い方をインデックスリストとする
         index_list = label_input_list if len(label_input_list) > len(label_true_list) else label_true_list
+        
         # 共通ラベル
         common_labels = list(sorted(set(label_input_list) & set(label_true_list), key=index_list.index))
-        for label in common_labels:
+        fig, axis = plt.subplots(len(common_labels), sharex=True)  # 複数グラフをx軸を共有して表示
+        
+        for i, label in enumerate(common_labels):
             # 平均０に平準化
             sig_true = df_true[label] - df_true[label].mean()
             sig_input = df_input[label] - df_input[label].mean()
@@ -73,18 +78,22 @@ class DiffTimingChart:
             # ラグ
             estimated_delay = corr.argmax() - (len(sig_input) - 1)
             # with lag
-            sig_input_lag = sig_input.shift(estimated_delay)
-
+            sig_true_lag = sig_true[estimated_delay:] if estimated_delay >= 0 else sig_true[:estimated_delay]
+            sig_input_lag = sig_input.shift(estimated_delay).dropna()
 
             # 畳み込み積分（ラグ考慮）
-            #corr_lag = sig_input_lag.corr().dropna().iat[1, 0]
-            corr_lag = np.correlate(sig_true[:estimated_delay], sig_input_lag.dropna(), 'full')
+            corr_lag = np.correlate(sig_true_lag, sig_input_lag, 'full')
             print(label)
             print(corr)
             print("estimated delay is " + str(estimated_delay))
 
             print("NEW CORR: \n", corr_lag)
+            print("MAX\n", np.argmax(corr_lag))
 
+            axis[i].plot(corr, label=label + ' @', color = 'gray') # データをステップでプロット
+            axis[i].plot(corr_lag, label=label + ' @' + 'ラグ考慮', color = 'orange') # データをステップでプロット
+            axis[i].legend(loc=2)                                   # 凡例表示
+        plt.show()
         return 
             
 
