@@ -77,16 +77,14 @@ class DiffTimingChart:
             corr = np.correlate(sig_true, sig_input, 'full')
             # ラグ
             estimated_delay = corr.argmax() - (len(sig_input) - 1)
+            estimated_delay = -estimated_delay if estimated_delay >= 0 else estimated_delay
             # with lag
-            sig_true_lag = sig_true[estimated_delay:] if estimated_delay >= 0 else sig_true[:estimated_delay]
             sig_input_lag = sig_input.shift(estimated_delay).dropna()
-
             # 畳み込み積分（ラグ考慮）
-            corr_lag = np.correlate(sig_true_lag, sig_input_lag, 'full')
+            corr_lag = np.correlate(sig_true, sig_input_lag, 'full')
             print(label)
             print(corr)
             print("estimated delay is " + str(estimated_delay))
-
             print("NEW CORR: \n", corr_lag)
             print("MAX\n", np.argmax(corr_lag))
 
