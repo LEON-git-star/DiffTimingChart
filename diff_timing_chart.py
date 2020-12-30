@@ -46,29 +46,29 @@ class DiffTimingChart:
         fig, axis = plt.subplots(len(common_labels), sharex=True)  # 複数グラフをx軸を共有して表示
         
         for i, label in enumerate(common_labels):
+            a = df_true[label]
+            v = df_input[label]
             # 平均０に平準化
-            sig_true = df_true[label] - df_true[label].mean()
-            sig_input = df_input[label] - df_input[label].mean()
+            sig_true = (a - a.mean())
+            sig_input = (v - v.mean())
             # 畳み込み積分
             corr = np.correlate(sig_true, sig_input, 'full')
             # ラグ
             estimated_delay = corr.argmax() - (len(sig_input) - 1)
             estimated_delay = -estimated_delay if estimated_delay >= 0 else estimated_delay
             # with lag
+            sig_true_lag = sig_true[estimated_delay:] if estimated_delay >= 0 else sig_true[:estimated_delay]
             sig_input_lag = sig_input.shift(estimated_delay).dropna()
             # 畳み込み積分（ラグ考慮）
-            corr_lag = np.correlate(sig_true, sig_input_lag, 'full')
+            corr_lag = np.correlate(sig_true_lag, sig_input_lag, 'full')
+            corr2 = np.corrcoef(sig_true_lag, sig_input_lag)[0,1]
             print(label)
-            print(corr)
+            print("correlation coefficient is " + "{:.1f}".format(corr2))
             print("estimated delay is " + str(estimated_delay))
-            print("NEW CORR: \n", corr_lag)
-            print("MAX\n", np.argmax(corr_lag))
 
             axis[i].plot(corr, label=label + ' @', color = 'gray') # データをステップでプロット
             axis[i].plot(corr_lag, label=label + ' @' + 'ラグ考慮', color = 'orange', ls="-.") # データをステップでプロット
             axis[i].legend(loc=2)                                   # 凡例表示
-        # 縦方向に、間隔を密にグラフをレイアウト
-        #fig.subplots_adjust(hspace=0.1)
         plt.show()
         #return 
             
