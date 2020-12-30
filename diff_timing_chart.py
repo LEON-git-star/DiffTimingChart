@@ -34,30 +34,6 @@ class DiffTimingChart:
         label_true = df_true.columns.values
         # 相関係数計算
         self.calc_corrcoef(df, label, df_true, label_true)
-
-        ## X軸情報(X軸共通化のため別途定義)
-        x = df.index.values
-        x_true = df_true.index.values
-        # グラフ数（多い方にあわせる）
-        graph_num = len(df.columns) if len(df.columns) > len(df_true.columns) else len(df_true.columns)
-        # データプロットと表示レイアウト
-        fig, axis = plt.subplots(graph_num, sharex=True)  # 複数グラフをx軸を共有して表示
-        for i, d in enumerate(df_true.T.values):
-            axis[i].plot(x_true, d, drawstyle='steps', label=label_true[i] + ' @' + self.TRUE_CSV, color = 'orange') # データをステップでプロット
-            axis[i].legend(loc=2)                                   # 凡例表示
-
-        for i, d in enumerate(df.T.values):
-            axis[i].plot(x, d, drawstyle='steps', label=label[i] + ' @' + self.INPUT_CSV, color = 'gray')   # データをステップでプロット
-            axis[i].spines['right'].set_visible(False)              # 右枠非表示
-            axis[i].spines['top'].set_visible(False)                # 上枠非表示
-            axis[i].legend(loc=2)                                   # 凡例表示
-            axis[i].grid(linestyle='-')                             # グリッド線表示
-
-        # 縦方向に、間隔を密にグラフをレイアウト
-        fig.subplots_adjust(hspace=0.1)
-
-        # グラフ表示
-        plt.show()
     
     def calc_corrcoef(self, df_input, label_input, df_true, label_true):
         label_input_list = list(label_input)
@@ -89,10 +65,12 @@ class DiffTimingChart:
             print("MAX\n", np.argmax(corr_lag))
 
             axis[i].plot(corr, label=label + ' @', color = 'gray') # データをステップでプロット
-            axis[i].plot(corr_lag, label=label + ' @' + 'ラグ考慮', color = 'orange') # データをステップでプロット
+            axis[i].plot(corr_lag, label=label + ' @' + 'ラグ考慮', color = 'orange', ls="-.") # データをステップでプロット
             axis[i].legend(loc=2)                                   # 凡例表示
+        # 縦方向に、間隔を密にグラフをレイアウト
+        #fig.subplots_adjust(hspace=0.1)
         plt.show()
-        return 
+        #return 
             
 
 if __name__ == "__main__":
