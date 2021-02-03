@@ -72,7 +72,6 @@ class DiffTimingChart:
             sig_true_lag = sig_true[estimated_delay:] if estimated_delay >= 0 else sig_true[:estimated_delay]
             sig_input_lag = sig_input.shift(estimated_delay).dropna()
             # 畳み込み積分（ラグ考慮）
-            #corr_lag = np.correlate(sig_true_lag, sig_input_lag, 'full')
             corr2 = np.corrcoef(sig_true_lag, sig_input_lag)[0,1]
             """
             print(label)
@@ -83,7 +82,6 @@ class DiffTimingChart:
                 weak_corr.append(label)
                 
             axis[i].plot(corr, label=label + ' @', color = 'gray') # データをステップでプロット
-            #axis[i].plot(corr_lag, label=label + ' @' + 'ラグ考慮', color = 'orange', ls="-.") # データをステップでプロット
             axis[i].legend(loc=2) # 凡例表示
         
         print("|相関係数|＝0.2～0.4 弱い相関")
