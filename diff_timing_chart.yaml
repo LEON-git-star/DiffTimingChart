@@ -1,0 +1,10 @@
+path:
+  input_folder:
+    true_f: 't_input'
+    target_f: 'input'
+  input_file:
+    true_f: '*.csv'
+    target_f: '*.csv'
+  output: 'output.txt'
+
+header_index: 3
